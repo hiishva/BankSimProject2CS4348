@@ -1,5 +1,6 @@
 import threading
 import random
+import time
 from queue import Queue
 
 ## Customer Object ##
@@ -36,6 +37,7 @@ customerCount = 0
 
 ## Client actions ##
 clientActionsList = ["withdraw", "deposit"]
+timeOptions = [0.05, 0]
 
 ## queue for customers ##
 bankLineQueue = Queue() ## Bank Line
@@ -67,19 +69,24 @@ def bankTransactions(teller, waitForManager, waitForSafe, bankLineQueue):
     transaction = customerT.getTransactionType() #Customer transaction
     waitForTransactionType.release()
 
+    ## BEGINNING TRANSACTIONS##
+
     if(transaction == "withdraw"):
-        #TODO
-    elif (transaction == "deposit"):
-        #TODO
+        print(str(teller) + " is handling a withdrawal transaction")
+        print(str(teller) + " is going to the manager")
+        print(str(teller) + " is asking the manager")
+        waitForManager.acquire()
+        print(str(teller) + " is getting the manager's permission")
+        time.sleep(random.uniform(.05, .30))
+        print (str(teller) + " got the manager's permission")
+        waitForManager.release()
     
-    ##BEGINNING THE TRANSACTION##
-    print(str(teller) + "")
 
 
 
 
 ## Creating the teller threads
-for i in range(2):
+for i in range(3):
     print("Making the Tellers")
     teller = Tellers(i)
     t = threading.Thread(target=bankTransactions, args=(teller, waitForManager, waitForSafe, bankLineQueue))
@@ -89,6 +96,7 @@ for i in range(2):
 ## Create the customer threads   
 for i in range(5):
     customer = Customers(i, random.choice(clientActionsList))
+    #customer = Customers(i, "withdraw")
     c = threading.Thread(target=goToBank, args=(customer, bankLineQueue, waitForEnter))
     c.start()
     customerList.append(c) #Add to the list of customers
