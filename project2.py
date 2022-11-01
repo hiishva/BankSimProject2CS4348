@@ -1,4 +1,8 @@
-import math
+###
+## Name: Ishva Patel
+## CS 4348.502
+## Project 2 Bank Simulator 
+
 import threading
 import random
 import time
@@ -38,7 +42,6 @@ customerCount = 0
 
 ## Client actions ##
 clientActionsList = ["withdraw", "deposit"]
-timeOptions = [0.05, 0]
 
 ## queue for customers ##
 bankLineQueue = Queue() ## Bank Line
@@ -58,51 +61,61 @@ def goToBank(customer, bankLineQueue,waitForEnter):
 ## Teller-customer transactions
 def bankTransactions(teller, waitForManager, waitForSafe, bankLineQueue):
     #TODO figure out how to continuously until the queue is empty
+    while (bankLineQueue.empty() == False):
 
-    ## CUSTOMER - TELLER INTRODUCTIONS ##   
-    customerT = bankLineQueue.get() # Get a customer from the line
-    print(str(customerT) + " is deciding on a teller")
-    waitForTeller.acquire() # Claims a teller
-    print(str(customerT) + " goes to " + str(teller))
-    print(str(customerT) + " introduces itself to " + str(teller))
-    print(str(teller) + " is now serving " + str(customerT))
-    waitForTransactionType.acquire()
-    print(str(customerT) + " requests a " + customerT.getTransactionType())
-    transaction = customerT.getTransactionType() #Customer transaction
-    waitForTransactionType.release()
+        ## CUSTOMER - TELLER INTRODUCTIONS ## 
+        customerT = bankLineQueue.get() # Get a customer from the line
+        print(str(customerT) + " is deciding on a teller")
+        waitForTeller.acquire() # Claims a teller
+        print(str(customerT) + " goes to " + str(teller))
+        print(str(customerT) + " introduces itself to " + str(teller))
+        print(str(teller) + " is now serving " + str(customerT))
+        #waitForTransactionType.acquire()
+        print(str(customerT) + " requests a " + customerT.getTransactionType())
+        transaction = customerT.getTransactionType() #Customer transaction
+        # waitForTransactionType.release()
 
-    ## BEGINNING TRANSACTIONS##
-    
-    #The transaction is withdraw
-    if(transaction == "withdraw"):
-        print(str(teller) + " is handling a withdrawal transaction")
-        print(str(teller) + " is going to the manager")
-        print(str(teller) + " is asking the manager")
-        waitForManager.acquire() # get the manager
-        print(str(teller) + " is getting the manager's permission")
-        time.sleep(random.uniform(.005, .030)) # waiting for manager's permissions
-        print (str(teller) + " got the manager's permission")
-        waitForManager.release() # release the manager
-    elif(transaction == "deposit"):  # if the transaction is deposit
-        print (str(teller) + " is handling a deposit transaction")
-    
-    ## GO TO THE SAFE ##
-    print(str(teller) + " is going to the safe")
-    waitForSafe.acquire()
-    print(str(teller) + " is in the safe")
-    time.sleep(random.uniform(.01, .05)) #Working in the safe (.01s to 0.05s)
-    print(str(teller) + " is leaving the safe")
-    waitForSafe.release()
+        ## BEGINNING TRANSACTIONS##
+        #The transaction is withdraw
+        if(transaction == "withdraw"):
+            print(str(teller) + " is handling a withdrawal transaction")
 
-    print (str(teller) + " is back from the safe")
+            # Getting manager's permission
+            print(str(teller) + " is going to the manager")
+            print(str(teller) + " is asking the manager")
+            waitForManager.acquire() # get the manager
+            print(str(teller) + " is getting the manager's permission")
+            time.sleep(random.uniform(.005, .030)) # waiting for manager's permissions Selecting random time between (.05s and .3s)
+            print (str(teller) + " got the manager's permission")
+            waitForManager.release() # release the manager
+        elif(transaction == "deposit"):  # if the transaction is deposit
+            print (str(teller) + " is handling a deposit transaction")
+        
+        ## GO TO THE SAFE ##
+        print(str(teller) + " is going to the safe")
+        waitForSafe.acquire()
+        print(str(teller) + " is in the safe")
+        time.sleep(random.uniform(.01, .05)) #Working in the safe (.01s to 0.05s)
+        print(str(teller) + " is leaving the safe")
+        waitForSafe.release()
 
-    ## FINISH THE TRANSACTIONS ##
-    print(str(teller) + " is finished handling " + str(customerT) + "'s transaction.")
-    waitForTeller.release()
-    print(str(customerT) + " is leaving the bank.")
+        print (str(teller) + " is back from the safe")
+
+        ## FINISH THE TRANSACTIONS ##
+        print(str(teller) + " is finished handling " + str(customerT) + "'s transaction.")
+        waitForTeller.release()
+        print(str(customerT) + " is leaving the bank")
 
 
 
+
+## Create the customer threads   
+for i in range(5):
+    customer = Customers(i, random.choice(clientActionsList))
+    #customer = Customers(i, "withdraw")
+    c = threading.Thread(target=goToBank, args=(customer, bankLineQueue, waitForEnter))
+    c.start()
+    customerList.append(c) #Add to the list of customers
 
 ## Creating the teller threads
 for i in range(3):
@@ -112,13 +125,6 @@ for i in range(3):
     t.start()
     tellerList.append(t)
 
-## Create the customer threads   
-for i in range(5):
-    customer = Customers(i, random.choice(clientActionsList))
-    #customer = Customers(i, "withdraw")
-    c = threading.Thread(target=goToBank, args=(customer, bankLineQueue, waitForEnter))
-    c.start()
-    customerList.append(c) #Add to the list of customers
 
 
 
