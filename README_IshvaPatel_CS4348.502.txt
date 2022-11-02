@@ -9,4 +9,4 @@ The project2 file is the driver for the program. It runs the banking simulation 
 
 
 How to run the program:
-To run the program, go to the command line and run the command python3 project2.py. \nThen the simulations should begin until completion. During the simulation, there is no user interaction and no parameters need to be passed in to run the program. There is no parameters needed to run this simulation.
+To run the program, go to the command line and run the command python3 project2.py. Then the simulations should begin until completion. During the simulation, there is no user interaction and no parameters need to be passed in to run the program. There is no parameters needed to run this simulation.
