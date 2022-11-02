@@ -2,7 +2,7 @@
 ## Name: Ishva Patel
 ## CS 4348.502
 ## Project 2 Bank Simulator 
-
+###
 import threading
 import random
 import time
@@ -15,6 +15,8 @@ class Customers():
         self.transactionType = transactionType
     def __str__(self) :
         return ("Customer " + str(self.cid))
+
+    #Returns the transaction type of the user
     def getTransactionType(self):
         return self.transactionType
 
@@ -26,41 +28,35 @@ class Tellers():
     def __str__(self):
         return ("Teller " + str(self.tid))
 
-
 ## NECESSARY SEMAPHORES ##
-gLock = threading.Semaphore(1)
-waitForTeller = threading.Semaphore(3)
-waitForEnter = threading.Semaphore(2)
-waitForSafe = threading.Semaphore(2)
-waitForManager = threading.Semaphore(1)
-waitForTransactionType = threading.Semaphore(3)
-
-## GLOBAL VARIABLES ##
-gCount = 0
-TellerCount = 0
-customerCount = 0
+waitForTeller = threading.Semaphore(3) #Tellers
+waitForEnter = threading.Semaphore(2) # Entry of the bank
+waitForSafe = threading.Semaphore(2) #Entering the safe
+waitForManager = threading.Semaphore(1) # talking to the manager
 
 ## Client actions ##
 clientActionsList = ["withdraw", "deposit"]
 
-## queue for customers ##
+## Queue for customers ##
 bankLineQueue = Queue() ## Bank Line
 
-# Lists to add customers too
+# Lists to add customers too ##
 customerList = []
 tellerList = []
 
-## Enter the bank ##
+## Customers enter the bank ##
 def goToBank(customer, bankLineQueue,waitForEnter):
-    waitForEnter.acquire()
+
+    # Enter the bank#
+    waitForEnter.acquire() 
     print(str(customer) + " is entering the bank")
     bankLineQueue.put(customer)
     print(str(customer) + " is joining the line")
-    waitForEnter.release()
+    waitForEnter.release() # Release the bank
 
 ## Teller-customer transactions
 def bankTransactions(teller, waitForManager, waitForSafe, bankLineQueue):
-    #TODO figure out how to continuously until the queue is empty
+    ## Keep going until the line is empty 
     while (bankLineQueue.empty() == False):
 
         ## CUSTOMER - TELLER INTRODUCTIONS ## 
@@ -70,16 +66,13 @@ def bankTransactions(teller, waitForManager, waitForSafe, bankLineQueue):
         print(str(customerT) + " goes to " + str(teller))
         print(str(customerT) + " introduces itself to " + str(teller))
         print(str(teller) + " is now serving " + str(customerT))
-        #waitForTransactionType.acquire()
         print(str(customerT) + " requests a " + customerT.getTransactionType())
         transaction = customerT.getTransactionType() #Customer transaction
-        # waitForTransactionType.release()
-
+        
         ## BEGINNING TRANSACTIONS##
         #The transaction is withdraw
         if(transaction == "withdraw"):
             print(str(teller) + " is handling a withdrawal transaction")
-
             # Getting manager's permission
             print(str(teller) + " is going to the manager")
             print(str(teller) + " is asking the manager")
@@ -98,7 +91,6 @@ def bankTransactions(teller, waitForManager, waitForSafe, bankLineQueue):
         time.sleep(random.uniform(.01, .05)) #Working in the safe (.01s to 0.05s)
         print(str(teller) + " is leaving the safe")
         waitForSafe.release()
-
         print (str(teller) + " is back from the safe")
 
         ## FINISH THE TRANSACTIONS ##
@@ -106,27 +98,28 @@ def bankTransactions(teller, waitForManager, waitForSafe, bankLineQueue):
         waitForTeller.release()
         print(str(customerT) + " is leaving the bank")
 
-
-
-
+## CREATING THREADS ## 
 ## Create the customer threads   
-for i in range(5):
+for i in range(50):
     customer = Customers(i, random.choice(clientActionsList))
-    #customer = Customers(i, "withdraw")
     c = threading.Thread(target=goToBank, args=(customer, bankLineQueue, waitForEnter))
     c.start()
     customerList.append(c) #Add to the list of customers
 
 ## Creating the teller threads
 for i in range(3):
-    #print("Making the Tellers")
     teller = Tellers(i)
     t = threading.Thread(target=bankTransactions, args=(teller, waitForManager, waitForSafe, bankLineQueue))
     t.start()
-    tellerList.append(t)
+    tellerList.append(t) #Add the to list of tellers
 
+## CLOSING THE THREADS ##
+#Close the customer threads
+for custs in customerList:
+    custs.join()
 
+#Close the teller threads
+for tells in tellerList:
+    tells.join()
 
-
-
-
+print("The line is empty, the bank is now closed")
